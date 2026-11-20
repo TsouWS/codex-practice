@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f2e6d8">
+  <title>保險財務規劃工具</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: clamp(1rem, 5vw, 4rem);
+      background: #f2e6d8;
+      color: #38291f;
+      font: 1rem/1.6 -apple-system, BlinkMacSystemFont, "PingFang TC", sans-serif;
+    }
+    main {
+      max-width: 44rem;
+      margin: 0 auto;
+      padding: clamp(1.25rem, 5vw, 3rem);
+      background: #fffaf3;
+      border: 1px solid #dec9b6;
+      border-radius: 1.5rem;
+    }
+    h1 { margin: 0 0 1.5rem; font-size: clamp(1.625rem, 5vw, 2.5rem); line-height: 1.25; }
+    .fields { display: grid; gap: 1rem; }
+    @media (min-width: 38rem) {
+      .fields { grid-template-columns: 1fr 1fr; }
+    }
+    label { display: block; margin-bottom: .375rem; font-weight: 600; }
+    input {
+      display: block;
+      width: 100%;
+      min-height: 3.25rem;
+      padding: .625rem .875rem;
+      border: 1px solid #96765e;
+      border-radius: .625rem;
+      background: #fff;
+      color: inherit;
+      font: inherit;
+    }
+    input:focus { outline: 2px solid #754a31; outline-offset: 2px; }
+    input[aria-invalid="true"] { border-color: #9c342b; }
+    .result { margin-top: 1.5rem; padding: 1.25rem; background: #ead6c2; border-radius: 1rem; }
+    h2 { margin: 0; font-size: 1rem; }
+    output {
+      display: block;
+      font-size: clamp(1.75rem, 6vw, 2.75rem);
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      overflow-wrap: anywhere;
+    }
+    p { margin: .5rem 0 0; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>保險財務規劃工具</h1>
+    <div class="fields">
+      <div>
+        <label for="principal">本金（元）</label>
+        <input id="principal" type="number" inputmode="decimal" min="0" step="any" placeholder="例如 1000000">
+      </div>
+      <div>
+        <label for="annual-rate">年化配息率（%）</label>
+        <input id="annual-rate" type="number" inputmode="decimal" min="0" step="any" placeholder="例如 6">
+      </div>
+    </div>
+    <section class="result" aria-labelledby="result-title">
+      <h2 id="result-title">預估每月配息</h2>
+      <output id="monthly-payout" for="principal annual-rate" aria-label="預估每月配息">—</output>
+      <p id="message" aria-live="polite">請輸入本金與年化配息率。</p>
+      <p>本金 ×（年化配息率 ÷ 100）÷ 12</p>
+    </section>
+  </main>
+  <script>
+    const principal = document.getElementById('principal');
+    const annualRate = document.getElementById('annual-rate');
+    const payout = document.getElementById('monthly-payout');
+    const message = document.getElementById('message');
+    const formatter = new Intl.NumberFormat('zh-TW', {
+      maximumFractionDigits: 2
+    });
+
+    function updatePayout() {
+      const principalInvalid = !principal.validity.valid;
+      const rateInvalid = !annualRate.validity.valid;
+      principal.setAttribute('aria-invalid', String(principalInvalid));
+      annualRate.setAttribute('aria-invalid', String(rateInvalid));
+
+      payout.value = '—';
+      if (principalInvalid || rateInvalid) {
+        message.textContent = '請輸入大於或等於 0 的數字。';
+        return;
+      }
+      if (principal.value === '' || annualRate.value === '') {
+        message.textContent = '請輸入本金與年化配息率。';
+        return;
+      }
+
+      const monthly = principal.valueAsNumber * (annualRate.valueAsNumber / 1200);
+      if (!Number.isFinite(monthly)) {
+        message.textContent = '試算結果超出可顯示範圍。';
+        return;
+      }
+
+      payout.value = formatter.format(monthly) + ' 元';
+      message.textContent = '';
+    }
+
+    principal.addEventListener('input', updatePayout);
+    annualRate.addEventListener('input', updatePayout);
+    updatePayout();
+  </script>
+</body>
+</html>
